@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Sign Up - व्यापारी क्रेडिट जीनी</title>
+    <meta name="description" content="Login or create an account for MSME Credit Solutions platform">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="logo-container">
+                    <svg class="logo-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+                        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+                        <path d="M10 6h4"/>
+                        <path d="M10 10h4"/>
+                        <path d="M10 14h4"/>
+                        <path d="M10 18h4"/>
+                    </svg>
+                </div>
+                <h1 class="auth-title">व्यापारी क्रेडिट जीनी</h1>
+                <p class="auth-subtitle">MSME Credit Solutions | एमएसएमई क्रेडिट समाधान</p>
+            </div>
+
+            <!-- Content -->
+            <div class="auth-content">
+                <!-- Tabs -->
+                <div class="tabs">
+                    <div class="tabs-list">
+                        <button class="tab-trigger active" data-tab="signin">लॉगिन / Login</button>
+                        <button class="tab-trigger" data-tab="signup">साइन अप / Sign Up</button>
+                    </div>
+
+                    <!-- Sign In Tab -->
+                    <div class="tab-content active" id="signin">
+                        <form id="signinForm" class="auth-form">
+                            <div class="form-group">
+                                <label for="email" class="form-label">ईमेल / Email *</label>
+                                <div class="input-group">
+                                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                        <polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                    <input type="email" id="email" name="email" placeholder="आपका ईमेल / Your email" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password" class="form-label">पासवर्ड / Password *</label>
+                                <div class="input-group">
+                                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                        <circle cx="12" cy="16" r="1"/>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                    <input type="password" id="password" name="password" placeholder="आपका पासवर्ड / Your password" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary full-width">
+                                <span class="btn-text">लॉगिन करें / Login</span>
+                                <span class="btn-loading hidden">लॉगिन हो रहे हैं...</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Sign Up Tab -->
+                    <div class="tab-content" id="signup">
+                        <form id="signupForm" class="auth-form">
+                            <div class="form-group">
+                                <label for="signup-email" class="form-label">ईमेल / Email *</label>
+                                <div class="input-group">
+                                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                        <polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                    <input type="email" id="signup-email" name="email" placeholder="आपका ईमेल / Your email" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="display-name" class="form-label">नाम / Name</label>
+                                <div class="input-group">
+                                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    <input type="text" id="display-name" name="displayName" placeholder="आपका नाम / Your name">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="business-name" class="form-label">व्यापार का नाम / Business Name</label>
+                                <div class="input-group">
+                                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                                        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+                                        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+                                        <path d="M10 6h4"/>
+                                        <path d="M10 10h4"/>
+                                        <path d="M10 14h4"/>
+                                        <path d="M10 18h4"/>
+                                    </svg>
+                                    <input type="text" id="business-name" name="businessName" placeholder="आपके व्यापार का नाम / Your business name">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signup-password" class="form-label">पासवर्ड / Password *</label>
+                                <div class="input-group">
+                                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                        <circle cx="12" cy="16" r="1"/>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                    <input type="password" id="signup-password" name="password" placeholder="पासवर्ड बनाएं / Create password" required minlength="6">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary full-width">
+                                <span class="btn-text">साइन अप करें / Sign Up</span>
+                                <span class="btn-loading hidden">साइन अप हो रहे हैं...</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Home Link -->
+        <div class="back-link">
+            <a href="index.html" class="link">← मुख्य पृष्ठ पर वापस / Back to Home</a>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="auth.js"></script>
+</body>
+</html>

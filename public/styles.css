@@ -1,0 +1,337 @@
+/* Indian SMB-friendly design system with warm, trustworthy colors */
+
+:root {
+    --background: 45 23% 97%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Indian commerce inspired primary - warm saffron/orange */
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 98%;
+
+    /* Soft business green for trust */
+    --secondary: 142 76% 36%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Warm accent color */
+    --accent: 45 93% 47%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 24 95% 53%;
+
+    --radius: 0.75rem;
+
+    /* Success state */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+
+    /* Warning state */
+    --warning: 43 96% 56%;
+    --warning-foreground: 0 0% 98%;
+
+    /* Gradients for premium feel */
+    --gradient-primary: linear-gradient(135deg, hsl(24 95% 53%), hsl(45 93% 47%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(158 64% 52%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(45 23% 98%));
+}
+
+.dark {
+    --background: 240 10% 3.9%;
+    --foreground: 210 40% 98%;
+    --card: 240 5.9% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 5.9% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 142 76% 36%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 45 93% 47%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 24 95% 53%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 0 0% 98%;
+    --gradient-primary: linear-gradient(135deg, hsl(24 95% 53%), hsl(45 93% 47%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(158 64% 52%));
+    --gradient-card: linear-gradient(180deg, hsl(240 5.9% 10%), hsl(240 3.7% 15.9%));
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    line-height: 1.6;
+}
+
+/* Layout */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.bg-gradient-to-br {
+    background: linear-gradient(to bottom right, hsl(var(--background)), hsl(var(--background)), hsl(var(--muted)));
+}
+
+/* Typography */
+.text-5xl { font-size: 3rem; line-height: 1.1; }
+.text-6xl { font-size: 3.75rem; line-height: 1.1; }
+.text-3xl { font-size: 1.875rem; line-height: 1.2; }
+.text-xl { font-size: 1.25rem; line-height: 1.4; }
+.text-lg { font-size: 1.125rem; line-height: 1.4; }
+.text-sm { font-size: 0.875rem; line-height: 1.4; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+
+.text-center { text-align: center; }
+
+.text-foreground { color: hsl(var(--foreground)); }
+.text-muted-foreground { color: hsl(var(--muted-foreground)); }
+.text-card-foreground { color: hsl(var(--card-foreground)); }
+
+.bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-transparent { color: transparent; }
+
+/* Grid */
+.grid {
+    display: grid;
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+
+/* Flexbox */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.space-x-2 > * + * { margin-left: 0.5rem; }
+.space-x-4 > * + * { margin-left: 1rem; }
+
+/* Spacing */
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mb-16 { margin-bottom: 4rem; }
+.ml-2 { margin-left: 0.5rem; }
+
+/* Positioning */
+.absolute { position: absolute; }
+.relative { position: relative; }
+.top-4 { top: 1rem; }
+.right-4 { right: 1rem; }
+.z-10 { z-index: 10; }
+
+/* Sizing */
+.w-4 { width: 1rem; }
+.w-6 { width: 1.5rem; }
+.w-8 { width: 2rem; }
+.h-4 { height: 1rem; }
+.h-6 { height: 1.5rem; }
+.h-8 { height: 2rem; }
+.max-w-2xl { max-width: 42rem; }
+.max-w-4xl { max-width: 56rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* Cards */
+.card {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease-in-out;
+}
+
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+}
+
+.card-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Icons */
+.icon-wrapper {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 4px 14px 0 hsl(var(--primary) / 0.39);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 hsl(var(--primary) / 0.49);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+}
+
+.btn-ghost:hover {
+    background: hsl(var(--muted));
+}
+
+/* Language Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: hsl(var(--muted));
+    transition: 0.3s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: hsl(var(--primary));
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Header */
+.bg-card\/80 {
+    background-color: hsl(var(--card) / 0.8);
+}
+
+.backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+}
+
+.border-border {
+    border-color: hsl(var(--border));
+}
+
+.rounded-lg {
+    border-radius: var(--radius);
+}
+
+/* Responsive */
+@media (min-width: 640px) {
+    .sm\\:flex-row { flex-direction: row; }
+}
+
+@media (min-width: 768px) {
+    .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .md\\:text-6xl { font-size: 3.75rem; line-height: 1.1; }
+}
+
+@media (min-width: 1024px) {
+    .lg\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
