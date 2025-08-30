@@ -1,0 +1,13 @@
+A web application that helps MSMEs (Micro, Small & Medium Enterprises) digitize their handwritten ledgers, invoices, and bills, automatically generate financial summaries and risk profiles, and produce ready-to-submit loan documents for lenders.
+
+Problem: Small businesses often lack digital records and struggle to prepare financial reports required for loans.
+Solution: Vyapari Credit Genie uses GenAI to parse handwritten bills, invoices, and ledgers, extract structured financial data, and generate professional financial statements.
+Impact: Bridges MSMEs to digital finance, reduces dependency on accountants, and makes credit access easier.
+
+Core Features:
+Email OTP authentication for secure access.
+Document Upload (multi-image): Upload bills, ledgers, invoices.
+AI Document Parsing: Automatically extract structured financial rows (date, counterparty, particulars, debit, credit, currency).
+Financial Statements: Summarized revenue, expenses, profit, cash flow, and risk score.
+Dashboard: KPIs and quick insights.
+Export PDF: Generate ready-to-submit lender packages.
