@@ -27,27 +27,23 @@ const Index = () => {
   const features = [
     {
       icon: Building,
-      title: "व्यापार की खाता बही",
-      subtitle: "Business Ledger Analysis", 
-      description: "अपनी हस्तलिखित खाता बही को डिजिटल में बदलें और वित्तीय विश्लेषण प्राप्त करें"
+      titleKey: 'landing.features.ledger.title',
+      descriptionKey: 'landing.features.ledger.description'
     },
     {
       icon: TrendingUp,
-      title: "वित्तीय रिपोर्ट",
-      subtitle: "Financial Reports",
-      description: "राजस्व, व्यय और लाभ का विस्तृत विश्लेषण और ट्रेंड देखें"
+      titleKey: 'landing.features.reports.title',
+      descriptionKey: 'landing.features.reports.description'
     },
     {
       icon: FileCheck,
-      title: "क्रेडिट स्कोर",
-      subtitle: "Credit Scoring",
-      description: "आपके व्यापार का क्रेडिट स्कोर और लेंडर पैकेज तैयार करें"
+      titleKey: 'landing.features.credit.title',
+      descriptionKey: 'landing.features.credit.description'
     },
     {
       icon: Users,
-      title: "लेंडर कनेक्शन",
-      subtitle: "Lender Connections",
-      description: "बैंकों और वित्तीय संस्थानों के लिए तैयार डॉक्यूमेंट एक्सपोर्ट करें"
+      titleKey: 'landing.features.lender.title',
+      descriptionKey: 'landing.features.lender.description'
     }
   ];
 
@@ -78,30 +74,22 @@ const Index = () => {
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              व्यापारी क्रेडिट जीनी
+              {t('landing.hero.appName')}
             </span>
           </h1>
           
           <h2 className="text-2xl md:text-3xl font-semibold text-muted-foreground mb-6">
-            MSME Credit Solutions
+            {t('landing.hero.subtitle')}
           </h2>
           
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
-            अपनी हस्तलिखित खाता बही, बिल और चालान को डिजिटल में बदलें।
-            <br />
-            AI की मदद से वित्तीय विश्लेषण प्राप्त करें और क्रेडिट के लिए तैयार हों।
-          </p>
-          
-          <p className="text-base md:text-lg text-muted-foreground/80 mb-12">
-            Transform your handwritten ledgers, bills and invoices into digital format.
-            <br />
-            Get AI-powered financial analysis and become credit-ready.
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed">
+            {t('landing.hero.description')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/auth">
               <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-medium bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
-                शुरू करें / Get Started
+                {t('landing.hero.cta')}
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
@@ -117,15 +105,12 @@ const Index = () => {
                   <feature.icon className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-lg mb-2">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </CardTitle>
-                <CardDescription className="font-medium text-primary">
-                  {feature.subtitle}
-                </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {feature.description}
+                  {t(feature.descriptionKey)}
                 </p>
               </CardContent>
             </Card>
@@ -135,16 +120,14 @@ const Index = () => {
         {/* CTA Section */}
         <div className="text-center bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-8 md:p-12">
           <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-            आज ही शुरू करें / Start Today
+            {t('landing.cta.title')}
           </h3>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            मिनटों में साइन अप करें और अपने व्यापार की वित्तीय यात्रा शुरू करें।
-            <br />
-            Sign up in minutes and begin your business financial journey.
+            {t('landing.cta.description')}
           </p>
           <Link to="/auth">
             <Button size="lg" className="h-14 px-8 text-lg font-medium bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
-              मुफ्त में शुरू करें / Start Free
+              {t('landing.cta.button')}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>
