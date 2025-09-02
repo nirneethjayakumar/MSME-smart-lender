@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,9 +17,74 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
+  const [kpiData, setKpiData] = useState({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    profitMargin: 0,
+    creditScore: 0,
+    documentCount: 0,
+    extractedLines: 0
+  });
+  const [kpiLoading, setKpiLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchKpiData = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Fetch documents count
+        const { data: documents, error: docsError } = await supabase
+          .from('documents')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (docsError) throw docsError;
+
+        // Fetch extracted lines with financial data
+        const { data: lines, error: linesError } = await supabase
+          .from('extracted_lines')
+          .select('debit, credit')
+          .in('document_id', documents?.map(doc => doc.id) || []);
+
+        if (linesError) throw linesError;
+
+        // Calculate totals
+        const totalCredit = lines?.reduce((sum, line) => sum + (Number(line.credit) || 0), 0) || 0;
+        const totalDebit = lines?.reduce((sum, line) => sum + (Number(line.debit) || 0), 0) || 0;
+        const profit = totalCredit - totalDebit;
+        const profitMargin = totalCredit > 0 ? (profit / totalCredit) * 100 : 0;
+
+        // Fetch latest statement for credit score
+        const { data: statements } = await supabase
+          .from('statements')
+          .select('score')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        setKpiData({
+          totalRevenue: totalCredit,
+          totalExpenses: totalDebit,
+          profitMargin: profitMargin,
+          creditScore: statements?.[0]?.score || 0,
+          documentCount: documents?.length || 0,
+          extractedLines: lines?.length || 0
+        });
+      } catch (error) {
+        console.error('Error fetching KPI data:', error);
+      } finally {
+        setKpiLoading(false);
+      }
+    };
+
+    fetchKpiData();
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -32,32 +98,31 @@ const Dashboard = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Mock KPI data - would come from API
   const kpis = [
     {
-      title: "कुल राजस्व / Total Revenue",
-      value: "₹12,50,000",
+      title: t('dashboard.totalRevenue'),
+      value: kpiLoading ? "..." : `₹${kpiData.totalRevenue.toLocaleString('en-IN')}`,
       change: "+15.2%",
       icon: IndianRupee,
       color: "text-success"
     },
     {
-      title: "मासिक व्यय / Monthly Expenses", 
-      value: "₹8,75,000",
+      title: t('dashboard.monthlyExpenses'),
+      value: kpiLoading ? "..." : `₹${kpiData.totalExpenses.toLocaleString('en-IN')}`,
       change: "-3.1%",
       icon: TrendingUp,
       color: "text-warning"
     },
     {
-      title: "लाभ मार्जिन / Profit Margin",
-      value: "18.5%",
+      title: t('dashboard.profitMargin'),
+      value: kpiLoading ? "..." : `${kpiData.profitMargin.toFixed(1)}%`,
       change: "+2.3%",
       icon: BarChart3,
       color: "text-success"
     },
     {
-      title: "क्रेडिट स्कोर / Credit Score",
-      value: "742",
+      title: t('dashboard.creditScore'),
+      value: kpiLoading ? "..." : kpiData.creditScore.toString(),
       change: "+12 pts",
       icon: FileCheck,
       color: "text-primary"
@@ -66,33 +131,29 @@ const Dashboard = () => {
 
   const quickActions = [
     {
-      title: "दस्तावेज़ अपलोड करें",
-      subtitle: "Upload Documents",
-      description: "बिल, चालान और खाता बही अपलोड करें",
+      title: t('dashboard.uploadDocuments'),
+      description: t('dashboard.uploadDescription'),
       icon: Upload,
       link: "/upload",
       color: "bg-gradient-to-r from-primary to-accent"
     },
     {
-      title: "दस्तावेज़ देखें",
-      subtitle: "View Documents", 
-      description: "अपलोड किए गए दस्तावेज़ों की स्थिति देखें",
+      title: t('dashboard.viewDocuments'),
+      description: t('dashboard.viewDescription'),
       icon: FileText,
       link: "/documents",
       color: "bg-gradient-to-r from-secondary to-success"
     },
     {
-      title: "वित्तीय रिपोर्ट",
-      subtitle: "Financial Statement",
-      description: "विस्तृत वित्तीय विश्लेषण देखें",
+      title: t('dashboard.financialStatement'),
+      description: t('dashboard.statementDescription'),
       icon: BarChart3,
       link: "/statement",
       color: "bg-gradient-to-r from-accent to-warning"
     },
     {
-      title: "लेंडर पैकेज",
-      subtitle: "Export Package",
-      description: "ऋणदाताओं के लिए रिपोर्ट निर्यात करें",
+      title: t('dashboard.lenderPackage'),
+      description: t('dashboard.packageDescription'),
       icon: Download,
       link: "/export",
       color: "bg-gradient-to-r from-muted-foreground to-foreground"
@@ -114,10 +175,10 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            नमस्ते / Welcome, {user.email?.split('@')[0]}!
+            {t('dashboard.welcome')}, {user.email?.split('@')[0]}!
           </h1>
           <p className="text-muted-foreground text-lg">
-            आपके व्यापार के वित्तीय डैशबोर्ड में आपका स्वागत है / Welcome to your business financial dashboard
+            {t('dashboard.subtitle')}
           </p>
         </div>
 
@@ -135,7 +196,7 @@ const Dashboard = () => {
                 <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
                 <p className={`text-xs ${kpi.color} flex items-center`}>
                   {kpi.change}
-                  <span className="text-muted-foreground ml-1">पिछले महीने से</span>
+                  <span className="text-muted-foreground ml-1">{t('dashboard.fromLastMonth')}</span>
                 </p>
               </CardContent>
             </Card>
@@ -154,9 +215,6 @@ const Dashboard = () => {
                   <CardTitle className="text-lg">
                     {action.title}
                   </CardTitle>
-                  <CardDescription className="font-medium text-muted-foreground">
-                    {action.subtitle}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent className="text-center">
                   <p className="text-sm text-muted-foreground">
@@ -173,7 +231,7 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building className="w-5 h-5" />
-              हाल की गतिविधि / Recent Activity
+              {t('dashboard.recentActivity')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -189,7 +247,7 @@ const Dashboard = () => {
                       variant={activity.status === 'completed' ? 'default' : 'secondary'}
                       className={activity.status === 'completed' ? 'bg-success' : 'bg-warning'}
                     >
-                      {activity.status === 'completed' ? 'पूर्ण' : 'प्रगति में'}
+                      {activity.status === 'completed' ? t('dashboard.completed') : t('dashboard.processing')}
                     </Badge>
                     <span className="text-sm text-muted-foreground">{activity.time}</span>
                   </div>
