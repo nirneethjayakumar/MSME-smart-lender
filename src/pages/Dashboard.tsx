@@ -29,7 +29,11 @@ const Dashboard = () => {
     profitMargin: 0,
     creditScore: 0,
     documentCount: 0,
-    extractedLines: 0
+    extractedLines: 0,
+    revenueChange: 0,
+    expenseChange: 0,
+    profitMarginChange: 0,
+    creditScoreChange: 0
   });
   const [kpiLoading, setKpiLoading] = useState(true);
 
@@ -41,7 +45,7 @@ const Dashboard = () => {
         // Fetch documents count
         const { data: documents, error: docsError } = await supabase
           .from('documents')
-          .select('id')
+          .select('id, created_at')
           .eq('user_id', user.id);
 
         if (docsError) throw docsError;
@@ -49,32 +53,73 @@ const Dashboard = () => {
         // Fetch extracted lines with financial data
         const { data: lines, error: linesError } = await supabase
           .from('extracted_lines')
-          .select('debit, credit')
+          .select('debit, credit, date')
           .in('document_id', documents?.map(doc => doc.id) || []);
 
         if (linesError) throw linesError;
 
-        // Calculate totals
-        const totalCredit = lines?.reduce((sum, line) => sum + (Number(line.credit) || 0), 0) || 0;
-        const totalDebit = lines?.reduce((sum, line) => sum + (Number(line.debit) || 0), 0) || 0;
+        // Calculate current month data
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        const currentMonthLines = lines?.filter(line => {
+          if (!line.date) return false;
+          const lineDate = new Date(line.date);
+          return lineDate.getMonth() === currentMonth && lineDate.getFullYear() === currentYear;
+        }) || [];
+
+        // Calculate previous month data
+        const previousDate = new Date(currentYear, currentMonth - 1, 1);
+        const previousMonth = previousDate.getMonth();
+        const previousYear = previousDate.getFullYear();
+        
+        const previousMonthLines = lines?.filter(line => {
+          if (!line.date) return false;
+          const lineDate = new Date(line.date);
+          return lineDate.getMonth() === previousMonth && lineDate.getFullYear() === previousYear;
+        }) || [];
+
+        // Calculate current totals
+        const totalCredit = currentMonthLines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+        const totalDebit = currentMonthLines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
         const profit = totalCredit - totalDebit;
         const profitMargin = totalCredit > 0 ? (profit / totalCredit) * 100 : 0;
 
-        // Fetch latest statement for credit score
+        // Calculate previous totals
+        const prevTotalCredit = previousMonthLines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+        const prevTotalDebit = previousMonthLines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
+        const prevProfit = prevTotalCredit - prevTotalDebit;
+        const prevProfitMargin = prevTotalCredit > 0 ? (prevProfit / prevTotalCredit) * 100 : 0;
+
+        // Calculate percentage changes
+        const revenueChange = prevTotalCredit > 0 ? ((totalCredit - prevTotalCredit) / prevTotalCredit) * 100 : 0;
+        const expenseChange = prevTotalDebit > 0 ? ((totalDebit - prevTotalDebit) / prevTotalDebit) * 100 : 0;
+        const profitMarginChange = prevProfitMargin > 0 ? profitMargin - prevProfitMargin : 0;
+
+        // Fetch latest two statements for credit score comparison
         const { data: statements } = await supabase
           .from('statements')
           .select('score')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(2);
+
+        const currentScore = statements?.[0]?.score || 0;
+        const previousScore = statements?.[1]?.score || 0;
+        const creditScoreChange = currentScore - previousScore;
 
         setKpiData({
           totalRevenue: totalCredit,
           totalExpenses: totalDebit,
           profitMargin: profitMargin,
-          creditScore: statements?.[0]?.score || 0,
+          creditScore: currentScore,
           documentCount: documents?.length || 0,
-          extractedLines: lines?.length || 0
+          extractedLines: lines?.length || 0,
+          revenueChange,
+          expenseChange,
+          profitMarginChange,
+          creditScoreChange
         });
       } catch (error) {
         console.error('Error fetching KPI data:', error);
@@ -102,30 +147,30 @@ const Dashboard = () => {
     {
       title: t('dashboard.totalRevenue'),
       value: kpiLoading ? "..." : `₹${kpiData.totalRevenue.toLocaleString('en-IN')}`,
-      change: "+15.2%",
+      change: kpiLoading ? "..." : `${kpiData.revenueChange >= 0 ? '+' : ''}${kpiData.revenueChange.toFixed(1)}%`,
       icon: IndianRupee,
-      color: "text-success"
+      color: kpiData.revenueChange >= 0 ? "text-success" : "text-destructive"
     },
     {
       title: t('dashboard.monthlyExpenses'),
       value: kpiLoading ? "..." : `₹${kpiData.totalExpenses.toLocaleString('en-IN')}`,
-      change: "-3.1%",
+      change: kpiLoading ? "..." : `${kpiData.expenseChange >= 0 ? '+' : ''}${kpiData.expenseChange.toFixed(1)}%`,
       icon: TrendingUp,
-      color: "text-warning"
+      color: kpiData.expenseChange <= 0 ? "text-success" : "text-destructive"
     },
     {
       title: t('dashboard.profitMargin'),
       value: kpiLoading ? "..." : `${kpiData.profitMargin.toFixed(1)}%`,
-      change: "+2.3%",
+      change: kpiLoading ? "..." : `${kpiData.profitMarginChange >= 0 ? '+' : ''}${kpiData.profitMarginChange.toFixed(1)}%`,
       icon: BarChart3,
-      color: "text-success"
+      color: kpiData.profitMarginChange >= 0 ? "text-success" : "text-destructive"
     },
     {
       title: t('dashboard.creditScore'),
       value: kpiLoading ? "..." : kpiData.creditScore.toString(),
-      change: "+12 pts",
+      change: kpiLoading ? "..." : `${kpiData.creditScoreChange >= 0 ? '+' : ''}${kpiData.creditScoreChange} pts`,
       icon: FileCheck,
-      color: "text-primary"
+      color: kpiData.creditScoreChange >= 0 ? "text-success" : "text-destructive"
     }
   ];
 
