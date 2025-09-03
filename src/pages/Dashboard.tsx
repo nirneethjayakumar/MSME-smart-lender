@@ -303,7 +303,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            {t('dashboard.welcome')}, {user.email?.split('@')[0]}!
+            {t('dashboard.welcome')}, {user.displayName?.split('@')[0]}!
           </h1>
           <p className="text-muted-foreground text-lg">
             {t('dashboard.subtitle')}
