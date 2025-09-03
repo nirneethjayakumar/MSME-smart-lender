@@ -36,6 +36,13 @@ const Dashboard = () => {
     creditScoreChange: 0
   });
   const [kpiLoading, setKpiLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState<Array<{
+    action: string;
+    time: string;
+    status: 'processing' | 'completed' | 'failed';
+    type: string;
+  }>>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   useEffect(() => {
     const fetchKpiData = async () => {
@@ -205,12 +212,88 @@ const Dashboard = () => {
     }
   ];
 
-  const recentActivity = [
-    { action: "Invoice uploaded", time: "2 घंटे पहले", status: "processing" },
-    { action: "Ledger analyzed", time: "5 घंटे पहले", status: "completed" },
-    { action: "Statement generated", time: "1 दिन पहले", status: "completed" },
-    { action: "PDF exported", time: "2 दिन पहले", status: "completed" }
-  ];
+  useEffect(() => {
+    const fetchRecentActivity = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: documents, error } = await supabase
+          .from('documents')
+          .select('type, status, created_at, updated_at')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+
+        const activities = documents?.map(doc => {
+          const timeAgo = new Date().getTime() - new Date(doc.updated_at).getTime();
+          const hoursAgo = Math.floor(timeAgo / (1000 * 60 * 60));
+          const daysAgo = Math.floor(timeAgo / (1000 * 60 * 60 * 24));
+          
+          let timeDisplay;
+          if (daysAgo > 0) {
+            timeDisplay = `${daysAgo} ${t('dashboard.daysAgo')}`;
+          } else if (hoursAgo > 0) {
+            timeDisplay = `${hoursAgo} ${t('dashboard.hoursAgo')}`;
+          } else {
+            timeDisplay = t('dashboard.justNow');
+          }
+
+          let actionText = t('dashboard.documentUploaded');
+          if (doc.type === 'invoice') {
+            actionText = t('dashboard.invoiceUploaded');
+          } else if (doc.type === 'ledger') {
+            actionText = t('dashboard.ledgerUploaded');
+          }
+
+          return {
+            action: actionText,
+            time: timeDisplay,
+            status: doc.status as 'processing' | 'completed' | 'failed',
+            type: doc.type
+          };
+        }) || [];
+
+        setRecentActivity(activities);
+      } catch (error) {
+        console.error('Error fetching recent activity:', error);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchRecentActivity();
+  }, [user?.id, t]);
+
+  const getActivityStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return t('dashboard.completed');
+      case 'processing':
+        return t('dashboard.processing');
+      case 'pending':
+        return t('dashboard.pending');
+      case 'failed':
+        return t('dashboard.failed');
+      default:
+        return status;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-success';
+      case 'processing':
+      case 'pending':
+        return 'bg-warning';
+      case 'failed':
+        return 'bg-destructive';
+      default:
+        return 'bg-muted';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -281,23 +364,44 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                    <span className="font-medium">{activity.action}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={activity.status === 'completed' ? 'default' : 'secondary'}
-                      className={activity.status === 'completed' ? 'bg-success' : 'bg-warning'}
-                    >
-                      {activity.status === 'completed' ? t('dashboard.completed') : t('dashboard.processing')}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">{activity.time}</span>
-                  </div>
+              {activityLoading ? (
+                <div className="animate-pulse">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-muted"></div>
+                        <div className="h-4 w-32 bg-muted rounded"></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-16 bg-muted rounded"></div>
+                        <div className="h-4 w-20 bg-muted rounded"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-primary"></div>
+                      <span className="font-medium">{activity.action}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={activity.status === 'completed' ? 'default' : 'secondary'}
+                        className={getStatusColor(activity.status)}
+                      >
+                        {getActivityStatusText(activity.status)}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">{activity.time}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  {t('dashboard.noRecentActivity')}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
