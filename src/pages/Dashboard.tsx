@@ -43,7 +43,33 @@ const Dashboard = () => {
     type: string;
   }>>([]);
   const [activityLoading, setActivityLoading] = useState(true);
+  const [userName, setUserName] = useState<string>('');
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile?.display_name) {
+          setUserName(profile.display_name);
+        } else {
+          // Fallback to email if no display name
+          setUserName(user.email?.split('@')[0] || 'User');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        setUserName(user.email?.split('@')[0] || 'User');
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id, user?.email]);
   useEffect(() => {
     const fetchKpiData = async () => {
       if (!user?.id) return;
@@ -303,7 +329,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            {t('dashboard.welcome')}, {user.displayName?.split('@')[0]}!
+          {t('dashboard.welcome')}, {userName}!
           </h1>
           <p className="text-muted-foreground text-lg">
             {t('dashboard.subtitle')}
@@ -399,7 +425,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t('no RecentActivity')}
+                  {t('no Recent Activity')}
                 </div>
               )}
             </div>
