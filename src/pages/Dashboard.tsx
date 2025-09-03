@@ -399,7 +399,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t('dashboard.noRecentActivity')}
+                  {t('no RecentActivity')}
                 </div>
               )}
             </div>
