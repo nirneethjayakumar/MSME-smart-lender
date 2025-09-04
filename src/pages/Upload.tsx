@@ -63,67 +63,74 @@ const Upload = () => {
       });
       return;
     }
-
+    if (!user) {
+      console.error("No logged-in user found");
+      toast({
+        title: "Authentication Required",
+        description: "कृपया पहले लॉग इन करें / Please login first",
+        variant: "destructive",
+      });
+      return;
+    }
+  
     setIsUploading(true);
-    
+  
     try {
       const uploadedDocuments = [];
-
+  
       for (const file of selectedFiles) {
-        // Upload file to Supabase storage
+        // 1. Upload file to Supabase Storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
+  
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('document-images')
+          .from('document-images') // CHANGE to your bucket name
           .upload(fileName, file);
-
-        if (uploadError) {
-          throw new Error(`Upload failed: ${uploadError.message}`);
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
+  
+        if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+  
+        // 2. Get the public URL
+        const { data: urlData } = supabase.storage
           .from('document-images')
           .getPublicUrl(fileName);
-
-        // Create document record in database
+  
+        const publicUrl = urlData.publicUrl;
+        console.log("Public URL for uploaded file:", publicUrl);
+  
+        // 3. Insert document row in DB (array syntax!)
         const { data: document, error: docError } = await supabase
           .from('documents')
-          .insert({
+          .insert([{
             type: documentType,
             image_url: publicUrl,
-            user_id: user!.id,
+            user_id: user.id,
             status: 'pending'
-          })
+          }])
           .select()
           .single();
-
-        if (docError) {
-          throw new Error(`Database error: ${docError.message}`);
-        }
-
+  
+        if (docError) throw new Error(`Database error: ${docError.message}`);
+  
         uploadedDocuments.push(document);
-
-        // Trigger AI analysis
+  
+        // 4. Trigger post-upload processing (optional)
         const { error: analysisError } = await supabase.functions.invoke('analyze-document', {
           body: { document_id: document.id }
         });
-
+  
         if (analysisError) {
           console.error('Analysis error:', analysisError);
-          // Don't throw here as upload was successful, just log the error
         }
       }
-
+  
       toast({
-        title: "सफल अपलोड / Upload Successful", 
+        title: "सफल अपलोड / Upload Successful",
         description: `${selectedFiles.length} फ़ाइलें सफलतापूर्वक अपलोड हुईं और विश्लेषण शुरू हो गया / ${selectedFiles.length} files uploaded successfully and analysis started`,
       });
-
+  
       setSelectedFiles([]);
       setDocumentType('');
-      
+  
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -135,6 +142,7 @@ const Upload = () => {
       setIsUploading(false);
     }
   };
+  
 
   const documentTypes = [
     { value: 'bank_statement', label: 'बैंक स्टेटमेंट / Bank Statement' },
