@@ -11,6 +11,7 @@ import { Upload as UploadIcon, FileText, Image, X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { supabase } from '@/integrations/supabase/client';
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const Upload = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
@@ -35,8 +36,8 @@ const Upload = () => {
 
     // Convert FileList to File[] directly
     const files: File[] = Array.from(e.target.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-  
+    //const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const imageFiles = files.filter(file => file.type.startsWith('image/') && file.size <= MAX_IMAGE_SIZE);
     
     if (imageFiles.length !== files.length) {
       toast({
@@ -77,12 +78,13 @@ const Upload = () => {
   
     try {
       const uploadedDocuments = [];
+      console.log("Uploading for user.id:", user.id);
   
       for (const file of selectedFiles) {
         // 1. Upload file to Supabase Storage
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-  
+        //const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('document-images') // CHANGE to your bucket name
           .upload(fileName, file);
@@ -90,10 +92,13 @@ const Upload = () => {
         if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
   
         // 2. Get the public URL
-        const { data: urlData } = supabase.storage
+        const { data: urlData} = supabase.storage
           .from('document-images')
           .getPublicUrl(fileName);
-  
+          if (!urlData || !urlData.publicUrl) {
+            // Handle: public URL not generated (possible misconfiguration or file not found)
+            throw new Error('Could not get public URL for uploaded file.');
+          }
         const publicUrl = urlData.publicUrl;
         console.log("Public URL for uploaded file:", publicUrl);
   
@@ -109,8 +114,10 @@ const Upload = () => {
           .select()
           .single();
   
-        if (docError) throw new Error(`Database error: ${docError.message}`);
-  
+        if (docError){
+          console.error('Supabase DB insert error:', docError);
+           throw new Error(`Database error: ${docError.message}`);
+        }
         uploadedDocuments.push(document);
   
         // 4. Trigger post-upload processing (optional)
