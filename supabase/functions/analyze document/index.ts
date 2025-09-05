@@ -82,9 +82,9 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', document_id);
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not configured');
     }
 
     // Prepare the prompt based on document type
@@ -143,52 +143,52 @@ This is a receipt. Extract:
       }
     };
 
-    console.log('Calling OpenAI Vision API...');
+    console.log('Calling Gemini Vision API...');
 
-    // Call OpenAI Vision API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Gemini Vision API
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: 1500,
-        messages: [
+        contents: [
           {
-            role: 'user',
-            content: [
+            parts: [
               {
-                type: 'text',
                 text: getPrompt(document.type)
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: document.image_url,
-                  detail: 'low'
+                inline_data: {
+                  mime_type: "image/png",
+                  data: await fetch(document.image_url)
+                    .then(res => res.arrayBuffer())
+                    .then(buffer => btoa(String.fromCharCode(...new Uint8Array(buffer))))
                 }
               }
             ]
           }
-        ]
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 800,
+        }
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('Gemini API error:', errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const aiResponse = await response.json();
-    console.log('OpenAI response received');
+    console.log('Gemini response received');
 
     let extractedData: ExtractedTransaction[] = [];
     
     try {
-      const content = aiResponse.choices[0].message.content.trim();
+      const content = aiResponse.candidates[0].content.parts[0].text.trim();
       console.log('AI Response content:', content);
       
       // Try to parse JSON from the response
@@ -203,7 +203,7 @@ This is a receipt. Extract:
       console.log('Parsed extracted data:', extractedData);
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
-      console.log('Raw AI response:', aiResponse.choices[0].message.content);
+      console.log('Raw AI response:', aiResponse.candidates[0].content.parts[0].text);
       
       // Update document status to failed
       await supabase
@@ -213,7 +213,7 @@ This is a receipt. Extract:
         
       return new Response(JSON.stringify({ 
         error: 'Failed to parse extracted data',
-        raw_response: aiResponse.choices[0].message.content 
+        raw_response: aiResponse.candidates[0].content.parts[0].text 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
