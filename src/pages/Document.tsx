@@ -45,9 +45,16 @@ const Documents = () => {
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
 
-  const fetchDocuments = async () => {
+    const fetchDocuments = async () => {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('user_id', user.id);
     if (!user?.id) return;
-
+    if (error) {
+        console.error('Error fetching documents:', error);
+        return;
+      }
     try {
       setLoadingDocs(true);
       const { data: docs, error } = await supabase
@@ -104,7 +111,42 @@ const Documents = () => {
   };
 
   useEffect(() => {
-    fetchDocuments();
+    if (!user?.id) return;
+  
+    const channel = supabase
+      .channel('public:documents') // a unique channel name
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // listen for INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'documents',
+          filter: `user_id=eq.${user.id}`, // listen only for the current user's docs
+        },
+        (payload) => {
+          console.log('Realtime event on documents:', payload);
+          // Modify documents state based on event type
+          setDocuments((prevDocuments) => {
+            switch (payload.eventType) {
+              case 'INSERT':
+                return [payload.new, ...prevDocuments];
+              case 'UPDATE':
+                return prevDocuments.map((doc) =>
+                  doc.id === payload.new.id ? payload.new : doc
+                );
+              case 'DELETE':
+                return prevDocuments.filter((doc) => doc.id !== payload.old.id);
+              default:
+                return prevDocuments;
+            }
+          });
+        }
+      )
+      .subscribe();
+  
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   if (loading) {
@@ -325,5 +367,4 @@ const Documents = () => {
     </div>
   );
 };
-
 export default Documents;
