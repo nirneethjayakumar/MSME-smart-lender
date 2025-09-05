@@ -1,6 +1,24 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // or 'next/router' if using Next.js
 import { supabase } from '../integrations/supabase/client'; // Adjust path as needed
+import { useAuth } from '@/hooks/useAuth';
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const { setUser } = useAuth(); // Assumes you have a setter for auth user context
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null); // Update user context/state
+    navigate('/'); // Redirect to main website page (adjust path as needed)
+  };
+
+  return (
+    <button onClick={handleLogout}>
+      Logout
+    </button>
+  );
+};
 
 const AuthRedirectHandler: React.FC = () => {
   const navigate = useNavigate();
