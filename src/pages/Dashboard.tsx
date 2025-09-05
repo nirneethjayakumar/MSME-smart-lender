@@ -70,97 +70,97 @@ const Dashboard = () => {
 
     fetchUserProfile();
   }, [user?.id, user?.email]);
+ const fetchKpiData = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Fetch documents count
+      const { data: documents, error: docsError } = await supabase
+        .from('documents')
+        .select('id, created_at')
+        .eq('user_id', user.id);
+
+      if (docsError) throw docsError;
+
+      // Fetch extracted lines with financial data
+      const { data: lines, error: linesError } = await supabase
+        .from('extracted_lines')
+        .select('debit, credit, date')
+        .in('document_id', documents?.map(doc => doc.id) || []);
+
+      if (linesError) throw linesError;
+
+      // Calculate current month data
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      
+      const currentMonthLines = lines?.filter(line => {
+        if (!line.date) return false;
+        const lineDate = new Date(line.date);
+        return lineDate.getMonth() === currentMonth && lineDate.getFullYear() === currentYear;
+      }) || [];
+
+      // Calculate previous month data
+      const previousDate = new Date(currentYear, currentMonth - 1, 1);
+      const previousMonth = previousDate.getMonth();
+      const previousYear = previousDate.getFullYear();
+      
+      const previousMonthLines = lines?.filter(line => {
+        if (!line.date) return false;
+        const lineDate = new Date(line.date);
+        return lineDate.getMonth() === previousMonth && lineDate.getFullYear() === previousYear;
+      }) || [];
+
+      // Calculate current totals
+      const totalCredit = currentMonthLines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+      const totalDebit = currentMonthLines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
+      const profit = totalCredit - totalDebit;
+      const profitMargin = totalCredit > 0 ? (profit / totalCredit) * 100 : 0;
+
+      // Calculate previous totals
+      const prevTotalCredit = previousMonthLines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+      const prevTotalDebit = previousMonthLines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
+      const prevProfit = prevTotalCredit - prevTotalDebit;
+      const prevProfitMargin = prevTotalCredit > 0 ? (prevProfit / prevTotalCredit) * 100 : 0;
+
+      // Calculate percentage changes
+      const revenueChange = prevTotalCredit > 0 ? ((totalCredit - prevTotalCredit) / prevTotalCredit) * 100 : 0;
+      const expenseChange = prevTotalDebit > 0 ? ((totalDebit - prevTotalDebit) / prevTotalDebit) * 100 : 0;
+      const profitMarginChange = prevProfitMargin > 0 ? profitMargin - prevProfitMargin : 0;
+
+      // Fetch latest two statements for credit score comparison
+      const { data: statements } = await supabase
+        .from('statements')
+        .select('score')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      const currentScore = statements?.[0]?.score || 0;
+      const previousScore = statements?.[1]?.score || 0;
+      const creditScoreChange = currentScore - previousScore;
+
+      setKpiData({
+        totalRevenue: totalCredit,
+        totalExpenses: totalDebit,
+        profitMargin: profitMargin,
+        creditScore: currentScore,
+        documentCount: documents?.length || 0,
+        extractedLines: lines?.length || 0,
+        revenueChange,
+        expenseChange,
+        profitMarginChange,
+        creditScoreChange
+      });
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
+    } finally {
+      setKpiLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchKpiData = async () => {
-      if (!user?.id) return;
-
-      try {
-        // Fetch documents count
-        const { data: documents, error: docsError } = await supabase
-          .from('documents')
-          .select('id, created_at')
-          .eq('user_id', user.id);
-
-        if (docsError) throw docsError;
-
-        // Fetch extracted lines with financial data
-        const { data: lines, error: linesError } = await supabase
-          .from('extracted_lines')
-          .select('debit, credit, date')
-          .in('document_id', documents?.map(doc => doc.id) || []);
-
-        if (linesError) throw linesError;
-
-        // Calculate current month data
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
-        
-        const currentMonthLines = lines?.filter(line => {
-          if (!line.date) return false;
-          const lineDate = new Date(line.date);
-          return lineDate.getMonth() === currentMonth && lineDate.getFullYear() === currentYear;
-        }) || [];
-
-        // Calculate previous month data
-        const previousDate = new Date(currentYear, currentMonth - 1, 1);
-        const previousMonth = previousDate.getMonth();
-        const previousYear = previousDate.getFullYear();
-        
-        const previousMonthLines = lines?.filter(line => {
-          if (!line.date) return false;
-          const lineDate = new Date(line.date);
-          return lineDate.getMonth() === previousMonth && lineDate.getFullYear() === previousYear;
-        }) || [];
-
-        // Calculate current totals
-        const totalCredit = currentMonthLines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
-        const totalDebit = currentMonthLines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
-        const profit = totalCredit - totalDebit;
-        const profitMargin = totalCredit > 0 ? (profit / totalCredit) * 100 : 0;
-
-        // Calculate previous totals
-        const prevTotalCredit = previousMonthLines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
-        const prevTotalDebit = previousMonthLines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
-        const prevProfit = prevTotalCredit - prevTotalDebit;
-        const prevProfitMargin = prevTotalCredit > 0 ? (prevProfit / prevTotalCredit) * 100 : 0;
-
-        // Calculate percentage changes
-        const revenueChange = prevTotalCredit > 0 ? ((totalCredit - prevTotalCredit) / prevTotalCredit) * 100 : 0;
-        const expenseChange = prevTotalDebit > 0 ? ((totalDebit - prevTotalDebit) / prevTotalDebit) * 100 : 0;
-        const profitMarginChange = prevProfitMargin > 0 ? profitMargin - prevProfitMargin : 0;
-
-        // Fetch latest two statements for credit score comparison
-        const { data: statements } = await supabase
-          .from('statements')
-          .select('score')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(2);
-
-        const currentScore = statements?.[0]?.score || 0;
-        const previousScore = statements?.[1]?.score || 0;
-        const creditScoreChange = currentScore - previousScore;
-
-        setKpiData({
-          totalRevenue: totalCredit,
-          totalExpenses: totalDebit,
-          profitMargin: profitMargin,
-          creditScore: currentScore,
-          documentCount: documents?.length || 0,
-          extractedLines: lines?.length || 0,
-          revenueChange,
-          expenseChange,
-          profitMarginChange,
-          creditScoreChange
-        });
-      } catch (error) {
-        console.error('Error fetching KPI data:', error);
-      } finally {
-        setKpiLoading(false);
-      }
-    };
-
     fetchKpiData();
   }, [user?.id]);
 
@@ -290,6 +290,29 @@ const Dashboard = () => {
     };
 
     fetchRecentActivity();
+
+    // Set up real-time subscription for document updates
+    const channel = supabase
+      .channel('documents_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'documents',
+          filter: `user_id=eq.${user?.id}`
+        },
+        () => {
+          // Refetch data when documents change
+          fetchRecentActivity();
+          fetchKpiData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id, t]);
 
   const getActivityStatusText = (status: string) => {
@@ -329,7 +352,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-          {t('dashboard.welcome')}, {userName}!
+            {t('dashboard.welcome')}, {userName}!
           </h1>
           <p className="text-muted-foreground text-lg">
             {t('dashboard.subtitle')}
@@ -425,7 +448,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t('no Recent Activity')}
+                  {t('dashboard.noRecentActivity')}
                 </div>
               )}
             </div>

@@ -153,8 +153,8 @@ This is a receipt. Extract:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        max_tokens: 4000,
+        model: 'gpt-4o-mini',
+        max_tokens: 1500,
         messages: [
           {
             role: 'user',
@@ -167,7 +167,7 @@ This is a receipt. Extract:
                 type: 'image_url',
                 image_url: {
                   url: document.image_url,
-                  detail: 'high'
+                  detail: 'low'
                 }
               }
             ]
