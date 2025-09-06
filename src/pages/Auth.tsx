@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Lock, Building, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const Auth = () => {
   const { user, signUp, signIn, loading } = useAuth();
@@ -22,29 +23,41 @@ const Auth = () => {
   if (user && !loading) {
     return <Navigate to="/dashboard" replace />;
   }
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
   
     const { error } = await signUp(email, password);
-    
+  
     if (!error) {
-      // Await getUser to get the current authenticated user info
+      // Get the authenticated user
       const { data } = await supabase.auth.getUser();
-      
+  
       if (data?.user) {
-        // Insert profile row linked to newly created user
+        // Insert new profile record linked to this user
         await supabase.from('profiles').insert([{
           user_id: data.user.id,
-          display_name: displayName,
-          business_name: businessName,
+          display_name: displayName || '',
+          business_name: businessName || '',
         }]);
       }
+  
+      toast({
+        title: "सफल / Success",
+        description: "कृपया अपना ईमेल चेक करें / Please check your email to verify your account",
+      });
+    } else {
+      toast({
+        title: "साइन अप में त्रुटि / Sign Up Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   
     setIsLoading(false);
   };
+  
+
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
