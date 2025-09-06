@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Lock, Building, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const { user, signUp, signIn, loading } = useAuth();
@@ -25,7 +26,23 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await signUp(email, password);
+  
+    const { error } = await signUp(email, password);
+    
+    if (!error) {
+      // Await getUser to get the current authenticated user info
+      const { data } = await supabase.auth.getUser();
+      
+      if (data?.user) {
+        // Insert profile row linked to newly created user
+        await supabase.from('profiles').insert([{
+          user_id: data.user.id,
+          display_name: displayName,
+          business_name: businessName,
+        }]);
+      }
+    }
+  
     setIsLoading(false);
   };
 
