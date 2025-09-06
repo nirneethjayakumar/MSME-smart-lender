@@ -3,7 +3,6 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -21,10 +20,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
+  // Effect 1: Listen to auth changes and set user/session
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -33,7 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
+    // Also get current session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -42,6 +40,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Effect 2: Fetch profile when user is set and loading is false
+  useEffect(() => {
+    if (loading) return;
+
+    console.log('Fetching profile for user ID:', user?.id);
+    if (!user?.id) return;
+
+    const fetchProfile = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else {
+        // You can store or use profile data as needed here
+      }
+    };
+
+    fetchProfile();
+  }, [user?.id, loading]);
 
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -93,7 +115,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       title: "लॉग आउट / Logged Out",
       description: "आप सफलतापूर्वक लॉग आउट हो गए / You have been logged out successfully",
     });
-    navigate('/');
   };
 
   return (
