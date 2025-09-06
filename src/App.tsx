@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Documents from "./pages/Document"; 
 import Upload from "./pages/Upload";
 import NotFound from "./pages/NotFound";
+import Analysis from "./pages/Analysis";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/upload" element={<Upload />} />
             <Route path="/auth/callback" element={<AuthRedirectHandler />} />
             <Route path="/documents" element={<Documents />} />
+            <Route path="/financial-analysis" element={<Analysis />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

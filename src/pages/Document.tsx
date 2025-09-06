@@ -307,7 +307,15 @@ const Documents = () => {
                         <Eye className="h-4 w-4 mr-1" />
                         {selectedDocument === doc.id ? 'Hide' : 'View'} Details
                       </Button>
-                      
+                      {doc.status === 'completed' && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => window.location.href = `/analysis?document=${doc.id}`}
+                        >
+                          View Analysis
+                        </Button>
+                      )}
                       {doc.status === 'failed' && (
                         <Button 
                           variant="outline" 
