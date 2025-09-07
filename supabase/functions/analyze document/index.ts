@@ -82,9 +82,22 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', document_id);
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const geminiApiKey = Deno.env.get('Gemini_API_KEY');
     if (!geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+      console.error('Gemini API key not found in environment variables');
+      
+      // Update document status to failed
+      await supabase
+        .from('documents')
+        .update({ status: 'failed', error_message: 'API key not configured' })
+        .eq('id', document_id);
+        
+      return new Response(JSON.stringify({ 
+        error: 'Document analysis service is not properly configured. Please contact support.' 
+      }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Prepare the prompt based on document type
@@ -179,7 +192,19 @@ This is a receipt. Extract:
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API error:', errorText);
-      throw new Error(`Gemini API error: ${response.status}`);
+      
+      // Update document status to failed
+      await supabase
+        .from('documents')
+        .update({ status: 'failed', error_message: `API error: ${response.status}` })
+        .eq('id', document_id);
+        
+      return new Response(JSON.stringify({ 
+        error: `Document analysis failed. Please try again later.` 
+      }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const aiResponse = await response.json();

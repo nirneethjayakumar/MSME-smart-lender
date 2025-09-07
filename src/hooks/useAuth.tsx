@@ -3,6 +3,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
+  const navigate = useNavigate();
   // Effect 1: Listen to auth changes and set user/session
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -115,6 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       title: "लॉग आउट / Logged Out",
       description: "आप सफलतापूर्वक लॉग आउट हो गए / You have been logged out successfully",
     });
+    navigate('/');
   };
 
   return (
