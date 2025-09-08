@@ -226,7 +226,7 @@ const Dashboard = () => {
       title: t('dashboard.financialStatement'),
       description: t('dashboard.statementDescription'),
       icon: BarChart3,
-      link: "/statement",
+      link: "/analysis",
       color: "bg-gradient-to-r from-accent to-warning"
     },
     {

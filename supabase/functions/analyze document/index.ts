@@ -82,7 +82,7 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', document_id);
 
-    const geminiApiKey = Deno.env.get('Gemini_API_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       console.error('Gemini API key not found in environment variables');
       

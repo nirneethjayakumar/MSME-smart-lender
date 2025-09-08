@@ -23,7 +23,7 @@ const Navbar = () => {
     { name: t('nav.dashboard'), path: '/dashboard', icon: Home },
     { name: t('nav.upload'), path: '/upload', icon: Upload },
     { name: t('nav.documents'), path: '/documents', icon: FileText },
-    { name: t('nav.statement'), path: '/statement', icon: BarChart3 },
+    { name: t('nav.analysis'), path: '/analysis', icon: BarChart3 },
     { name: t('nav.export'), path: '/export', icon: Download },
   ];
 
