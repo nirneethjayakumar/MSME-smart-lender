@@ -70,7 +70,8 @@ const Dashboard = () => {
 
     fetchUserProfile();
   }, [user?.id, user?.email]);
- const fetchKpiData = async () => {
+
+  const fetchKpiData = async () => {
     if (!user?.id) return;
 
     try {
