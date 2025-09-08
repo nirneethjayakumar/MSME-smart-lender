@@ -54,7 +54,8 @@ const Documents = () => {
     if (error) {
         console.error('Error fetching documents:', error);
         return;
-      }
+    }
+
     try {
       setLoadingDocs(true);
       const { data: docs, error } = await supabase
@@ -65,7 +66,7 @@ const Documents = () => {
 
       if (error) throw error;
       setDocuments(docs || []);
-
+      console.log('Fetched documents:', docs);
       // Fetch extracted lines for each document
       if (docs && docs.length > 0) {
         const linesPromises = docs.map(async (doc) => {
@@ -112,7 +113,7 @@ const Documents = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-  
+    fetchDocuments();
     const channel = supabase
       .channel('public:documents') // a unique channel name
       .on(
