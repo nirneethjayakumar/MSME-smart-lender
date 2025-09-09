@@ -59,11 +59,17 @@ const DocumentSelection = () => {
   const [analyzing, setAnalyzing] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Analysis page - User state:', { user: user?.id, loading });
     fetchDocuments();
   }, [user?.id]);
 
   const fetchDocuments = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID, skipping document fetch');
+      return;
+    }
+
+    console.log('Fetching documents for user:', user.id);
 
     try {
       const { data, error } = await supabase
@@ -73,6 +79,7 @@ const DocumentSelection = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('Documents fetched:', data?.length || 0);
       setDocuments(data || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -83,15 +90,28 @@ const DocumentSelection = () => {
   };
 
   const triggerAnalysis = async (documentId: string) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID found');
+      return;
+    }
+    
+    console.log('Starting analysis for document:', documentId);
+    console.log('User ID:', user.id);
     
     setAnalyzing(documentId);
     try {
-      const { error } = await supabase.functions.invoke('analyze-document', {
+      console.log('Calling analyze-document function...');
+      
+      const { data, error } = await supabase.functions.invoke('analyze-document', {
         body: { document_id: documentId }
       });
 
-      if (error) throw error;
+      console.log('Function response:', { data, error });
+
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
       
       toast.success('Analysis started! This may take a few moments.');
       
@@ -103,7 +123,7 @@ const DocumentSelection = () => {
       
     } catch (error) {
       console.error('Error triggering analysis:', error);
-      toast.error('Failed to start analysis. Please try again.');
+      toast.error(`Failed to start analysis: ${error.message || 'Unknown error'}`);
       setAnalyzing(null);
     }
   };
