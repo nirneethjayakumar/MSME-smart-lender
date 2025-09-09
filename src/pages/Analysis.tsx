@@ -55,12 +55,16 @@ interface AnalysisSummary {
 const DocumentSelection = () => {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [extractedLines, setExtractedLines] = useState<ExtractedLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('Analysis page - User state:', { user: user?.id, loading });
-    fetchDocuments();
+    if (user?.id) {
+      fetchDocuments();
+      fetchExtractedLines();
+    }
   }, [user?.id]);
 
   const fetchDocuments = async () => {
@@ -86,6 +90,27 @@ const DocumentSelection = () => {
       toast.error('Failed to fetch documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExtractedLines = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('extracted_lines')
+        .select(`
+          *,
+          documents!inner(id, user_id, type)
+        `)
+        .eq('documents.user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      console.log('Extracted lines fetched:', data?.length || 0);
+      setExtractedLines(data || []);
+    } catch (error) {
+      console.error('Error fetching extracted lines:', error);
     }
   };
 
@@ -115,11 +140,11 @@ const DocumentSelection = () => {
       
       toast.success('Analysis started! This may take a few moments.');
       
-      // Refresh documents to show updated status
+      // Refresh data after a delay to see the results
       setTimeout(() => {
         fetchDocuments();
-        setAnalyzing(null);
-      }, 2000);
+        fetchExtractedLines();
+      }, 3000);
       
     } catch (error) {
       console.error('Error triggering analysis:', error);
@@ -150,8 +175,93 @@ const DocumentSelection = () => {
             Financial Analysis
           </h1>
           <p className="text-muted-foreground text-lg">
-            Select a document to view its AI-powered analysis
+            AI-powered insights from your uploaded documents
           </p>
+        </div>
+
+        {/* Show analysis summary if we have extracted data */}
+        {extractedLines.length > 0 && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Financial Summary
+                </CardTitle>
+                <CardDescription>
+                  Overview of all analyzed transactions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-4 gap-4 mb-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      ₹{extractedLines.filter(l => l.credit).reduce((sum, l) => sum + (l.credit || 0), 0).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Total Credits</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      ₹{extractedLines.filter(l => l.debit).reduce((sum, l) => sum + (l.debit || 0), 0).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Total Debits</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      ₹{(extractedLines.filter(l => l.credit).reduce((sum, l) => sum + (l.credit || 0), 0) - 
+                         extractedLines.filter(l => l.debit).reduce((sum, l) => sum + (l.debit || 0), 0)).toLocaleString()}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Net Cash Flow</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">
+                      {extractedLines.length}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Transactions</p>
+                  </div>
+                </div>
+
+                {/* Recent transactions table */}
+                <div>
+                  <h4 className="font-medium mb-3">Recent Transactions</h4>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="text-left p-3 font-medium">Date</th>
+                          <th className="text-left p-3 font-medium">Particulars</th>
+                          <th className="text-left p-3 font-medium">Counterparty</th>
+                          <th className="text-right p-3 font-medium">Credit</th>
+                          <th className="text-right p-3 font-medium">Debit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {extractedLines.slice(0, 10).map((line, index) => (
+                          <tr key={index} className="border-t">
+                            <td className="p-3 text-sm">
+                              {line.date ? new Date(line.date).toLocaleDateString() : '-'}
+                            </td>
+                            <td className="p-3 text-sm">{line.particulars}</td>
+                            <td className="p-3 text-sm">{line.counterparty || '-'}</td>
+                            <td className="p-3 text-sm text-right text-green-600">
+                              {line.credit ? `₹${line.credit.toLocaleString()}` : '-'}
+                            </td>
+                            <td className="p-3 text-sm text-right text-red-600">
+                              {line.debit ? `₹${line.debit.toLocaleString()}` : '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Your Documents</h2>
         </div>
 
         {documents.length === 0 ? (
