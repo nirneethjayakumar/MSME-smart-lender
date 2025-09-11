@@ -11,7 +11,8 @@ import {
   Calendar,
   User,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,16 +46,8 @@ const Documents = () => {
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
 
-    const fetchDocuments = async () => {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('user_id', user.id);
+  const fetchDocuments = async () => {
     if (!user?.id) return;
-    if (error) {
-        console.error('Error fetching documents:', error);
-        return;
-    }
 
     try {
       setLoadingDocs(true);
@@ -66,7 +59,7 @@ const Documents = () => {
 
       if (error) throw error;
       setDocuments(docs || []);
-      console.log('Fetched documents:', docs);
+
       // Fetch extracted lines for each document
       if (docs && docs.length > 0) {
         const linesPromises = docs.map(async (doc) => {
@@ -111,43 +104,40 @@ const Documents = () => {
     }
   };
 
+  const deleteDocument = async (documentId: string) => {
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      toast.loading('Deleting document...');
+      
+      // Delete extracted lines first
+      const { error: linesError } = await supabase
+        .from('extracted_lines')
+        .delete()
+        .eq('document_id', documentId);
+
+      if (linesError) throw linesError;
+
+      // Delete the document
+      const { error: docError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (docError) throw docError;
+      
+      toast.success('Document deleted successfully');
+      fetchDocuments(); // Refresh documents
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
   useEffect(() => {
-    if (!user?.id) return;
     fetchDocuments();
-    const channel = supabase
-      .channel('public:documents') // a unique channel name
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // listen for INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'documents',
-          filter: `user_id=eq.${user.id}`, // listen only for the current user's docs
-        },
-        (payload) => {
-          console.log('Realtime event on documents:', payload);
-          // Modify documents state based on event type
-          setDocuments((prevDocuments) => {
-            switch (payload.eventType) {
-              case 'INSERT':
-                return [payload.new, ...prevDocuments];
-              case 'UPDATE':
-                return prevDocuments.map((doc) =>
-                  doc.id === payload.new.id ? payload.new : doc
-                );
-              case 'DELETE':
-                return prevDocuments.filter((doc) => doc.id !== payload.old.id);
-              default:
-                return prevDocuments;
-            }
-          });
-        }
-      )
-      .subscribe();
-  
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [user?.id]);
 
   if (loading) {
@@ -308,6 +298,7 @@ const Documents = () => {
                         <Eye className="h-4 w-4 mr-1" />
                         {selectedDocument === doc.id ? 'Hide' : 'View'} Details
                       </Button>
+                      
                       {doc.status === 'completed' && (
                         <Button 
                           variant="default" 
@@ -317,6 +308,7 @@ const Documents = () => {
                           View Analysis
                         </Button>
                       )}
+                      
                       {doc.status === 'failed' && (
                         <Button 
                           variant="outline" 
@@ -326,6 +318,14 @@ const Documents = () => {
                           <RefreshCw className="h-4 w-4" />
                         </Button>
                       )}
+
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => deleteDocument(doc.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
 
                     {/* Detailed View */}
@@ -376,4 +376,5 @@ const Documents = () => {
     </div>
   );
 };
+
 export default Documents;
